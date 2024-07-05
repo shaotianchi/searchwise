@@ -554,6 +554,23 @@ video {
   --tw-contain-style:  ;
 }
 
+.h-\[44px\] {
+  height: 44px;
+}
+
+.w-\[44px\] {
+  width: 44px;
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+.bg-purple-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(168 85 247 / var(--tw-bg-opacity));
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

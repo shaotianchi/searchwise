@@ -1,28 +1,14 @@
-import path from 'path';
 import { defineConfig } from 'vite';
 
+import { crx } from '@crxjs/vite-plugin';
 import react from '@vitejs/plugin-react-swc';
+
+import manifest from './manifest.json';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  build: {
-    rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'src/main.tsx'),
-        content: path.resolve(__dirname, 'src/scripts/content.tsx'),
-      },
-      output: {
-        dir: 'dist',
-        entryFileNames: (chunkInfo) => {
-          const subdir = chunkInfo.facadeModuleId?.includes('scripts')
-            ? 'scripts/'
-            : ''
-          return `${subdir}[name].js`
-        },
-        chunkFileNames: 'chunks/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash][extname]',
-      },
-    },
+  plugins: [react(), crx({ manifest })],
+  server: {
+    port: 3000, // 确保定义了端口
   },
-  plugins: [react()],
 })
