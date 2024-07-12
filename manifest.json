@@ -7,11 +7,21 @@
     "default_popup": "index.html",
     "default_icon": "vite.svg"
   },
+  "permissions": ["tabs"],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/assets/entry.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_scripts": [
     {
       "js": ["src/scripts/content.tsx"],
       "matches": ["<all_urls>"],
       "run_at": "document_end"
     }
-  ]
+  ],
+  "background": {
+    "service_worker": "src/scripts/background.ts"
+  }
 }
