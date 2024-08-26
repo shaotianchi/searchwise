@@ -1,23 +1,15 @@
-import '../index.css';
+import '../index.css'
 
-import React, {
-  useEffect,
-  useState,
-} from 'react';
+import React, { useEffect, useState } from 'react'
 
-import ReactDOM from 'react-dom/client';
+import ReactDOM from 'react-dom/client'
+import Markdown from 'react-markdown'
 
-import { ShadowDom } from '@/components/ui/shadow-dom';
+import Loading from '@/components/ui/loading'
+import { ShadowDom } from '@/components/ui/shadow-dom'
+import { get, StorageKeys } from '@/lib/storage'
 
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-} from '../components/ui/sheet';
-import Core, {
-  CoreEvent,
-  SearchQueueNode,
-} from '../core';
+import Core, { CoreEvent, SearchQueueNode } from '../core'
 
 enum NoteStatus {
   Pending,
@@ -26,7 +18,7 @@ enum NoteStatus {
 }
 
 function getFaviconUrl() {
-  var linkElement = document.querySelector(
+  const linkElement = document.querySelector(
     'link[rel="icon"], link[rel="shortcut icon"]'
   ) as HTMLLinkElement
   return linkElement ? linkElement.href : undefined
@@ -36,34 +28,45 @@ export const FloatEntry = () => {
   const [status, setStatus] = useState(NoteStatus.Pending)
   const [showMain, setShowMain] = useState(false)
   const [currentNode, setCurrentNode] = useState<SearchQueueNode>()
+  const [nodes, setNodes] = useState<SearchQueueNode[]>([])
 
   useEffect(() => {
-    console.log(
-      'document is ',
-      document.getElementsByTagName('search-wise')[0],
-      document.getElementsByTagName('search-wise')[0].shadowRoot,
-      document
-        .getElementsByTagName('search-wise')[0]
-        .shadowRoot?.querySelector('#search-wise-float-entry'),
-      document.getElementById('search-wise-float-entry')
+    get<SearchQueueNode[]>(StorageKeys.SearchNotes).then((data) =>
+      setNodes(data || [])
     )
+  }, [])
+
+  useEffect(() => {
     Core.subscript<SearchQueueNode>(CoreEvent.NewPageVisite, (data) => {
-      console.log('new page visite: ', data)
       if (data) {
         setStatus(NoteStatus.Noting)
       }
-      setCurrentNode(data)
+      setCurrentNode(data && { ...data })
+    })
+
+    Core.subscript<SearchQueueNode>(CoreEvent.BeginGenerate, (data) => {
+      setCurrentNode(data && { ...data })
+    })
+
+    Core.subscript<SearchQueueNode>(CoreEvent.GenerateResult, (data) => {
+      setCurrentNode(data && { ...data })
     })
     Core.visitpage(location.href, {
       title: document.title,
-      icon: getFaviconUrl(),
     })
   }, [])
 
   const onButtonClick = () => {}
 
+  const onGenerateNote = () => {
+    Core.generateCurrent()
+  }
+
   return (
-    <div id='search-wise-float-entry' className='fixed bottom-[120px] right-0'>
+    <div
+      id='search-wise-float-entry'
+      className='fixed bottom-[120px] right-0 z-[2147483647]'
+    >
       <div className='flex flex-col items-end gap-2'>
         <div className='w-[32px] h-[32px] rounded-full bg-white shadow-sm flex items-center justify-center mr-[8px]'>
           <div
@@ -84,35 +87,65 @@ export const FloatEntry = () => {
             className='w-[75px] h-[36px]'
           />
         </div>
-        <Sheet open={showMain} onOpenChange={setShowMain}>
-          <SheetContent
-            className='z-[99999999]'
-            container={document
-              .getElementsByTagName('search-wise')[0]
-              ?.shadowRoot?.querySelector('#search-wise-float-entry')}
-          >
-            <SheetTitle>{`正在搜索：「${currentNode?.keyword}」`}</SheetTitle>
-            <div className='mt-3 flex flex-col gap-2 items-center'>
-              {currentNode?.pages?.map((page) => (
-                <div key={page.url} className='hover:bg-slate-100'>
-                  <div className='flex flex-row gap-1'>
-                    <img src={page.meta.icon} className='w-[16px] h-[16px]' />
-                    <a href={page.url} target='_blank'>
-                      {page.meta.title}
-                    </a>
-                  </div>
-                  <div className='text-[12px] text-gray-400'>{page.url}</div>
-                </div>
-              ))}
-              <div
-                role='button'
-                className='absolute bottom-6 bg-blue-500 h-[44px] rounded-full w-[90%] flex items-center justify-center text-white text-lg font-bold'
-              >
-                Generate Note
+        {showMain && (
+          <div className='fixed top-0 bottom-0 right-0 w-[40%] min-w-[400px] h-full bg-white p-3'>
+            <div className='flex flex-row h-full overflow-hidden'>
+              <div className='flex-1 overflow-y-scroll overflow-x-hidden overscroll-contain no-scrollbar'>
+                {(!currentNode?.status ||
+                  currentNode?.status === 'pending') && (
+                  <>
+                    <div className='font-bold text-xl'>{`正在搜索：「${currentNode?.keyword}」`}</div>
+                    <div className='mt-3 flex flex-col gap-2 items-center pb-[70px]'>
+                      {currentNode?.pages?.map((page) => (
+                        <div
+                          key={page.url}
+                          className='hover:bg-slate-100 flex flex-col items-start justify-center w-full px-2 py-3 rounded-sm'
+                        >
+                          <div className='flex flex-row gap-1'>
+                            {/* <img
+                              src={page.meta.icon}
+                              className='w-[16px] h-[16px] mt-[4px]'
+                            /> */}
+                            <a
+                              href={page.url}
+                              target='_blank'
+                              className='line-clamp-2'
+                            >
+                              {page.meta.title}
+                            </a>
+                          </div>
+                          <div className='text-[12px] text-gray-400 line-clamp-1'>
+                            {page.url}
+                          </div>
+                        </div>
+                      ))}
+                      <div
+                        role='button'
+                        className='absolute bottom-6 bg-blue-500 h-[44px] rounded-full w-[60%] flex items-center justify-center text-white text-lg font-bold shadow-md'
+                        onClick={onGenerateNote}
+                      >
+                        Generate Note
+                      </div>
+                    </div>
+                  </>
+                )}
+                {currentNode?.status === 'generating' && (
+                  <>
+                    <div>{`正在生成：「${currentNode?.keyword}」...`}</div>
+                    <Loading />
+                  </>
+                )}
+                {currentNode?.status === 'done' && (
+                  <>
+                    <div>{`「${currentNode?.keyword}」`}</div>
+                    <Markdown>{currentNode.note}</Markdown>
+                  </>
+                )}
               </div>
+              <div className='w-[44px]'></div>
             </div>
-          </SheetContent>
-        </Sheet>
+          </div>
+        )}
       </div>
     </div>
   )
