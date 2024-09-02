@@ -8,6 +8,7 @@ import Markdown from 'react-markdown'
 import Loading from '@/components/ui/loading'
 import { ShadowDom } from '@/components/ui/shadow-dom'
 import { get, StorageKeys } from '@/lib/storage'
+import { ArchiveIcon, Cross1Icon, GearIcon } from '@radix-ui/react-icons'
 
 import Core, { CoreEvent, SearchQueueNode } from '../core'
 
@@ -53,6 +54,9 @@ export const FloatEntry = () => {
     })
     Core.visitpage(location.href, {
       title: document.title,
+      desc: document
+        .querySelector('meta[name="description"]')
+        ?.getAttribute('content'),
     })
   }, [])
 
@@ -88,9 +92,9 @@ export const FloatEntry = () => {
           />
         </div>
         {showMain && (
-          <div className='fixed top-0 bottom-0 right-0 w-[40%] min-w-[400px] h-full bg-white p-3'>
+          <div className='fixed top-0 bottom-0 right-0 w-[40%] min-w-[400px] h-full bg-white py-3 pl-3'>
             <div className='flex flex-row h-full overflow-hidden'>
-              <div className='flex-1 overflow-y-scroll overflow-x-hidden overscroll-contain no-scrollbar'>
+              <div className='flex-1 overflow-y-scroll overflow-x-hidden overscroll-contain no-scrollbar text-black'>
                 {(!currentNode?.status ||
                   currentNode?.status === 'pending') && (
                   <>
@@ -109,7 +113,7 @@ export const FloatEntry = () => {
                             <a
                               href={page.url}
                               target='_blank'
-                              className='line-clamp-2'
+                              className='line-clamp-2 font-bold'
                             >
                               {page.meta.title}
                             </a>
@@ -117,6 +121,7 @@ export const FloatEntry = () => {
                           <div className='text-[12px] text-gray-400 line-clamp-1'>
                             {page.url}
                           </div>
+                          {page.meta.desc && <div>{page.meta.desc}</div>}
                         </div>
                       ))}
                       <div
@@ -142,7 +147,22 @@ export const FloatEntry = () => {
                   </>
                 )}
               </div>
-              <div className='w-[44px]'></div>
+              <div className='right-bar w-[64px] flex flex-col h-full border-l-[1px]'>
+                <div className='flex justify-end pr-2'>
+                  <Cross1Icon
+                    className='cursor-pointer'
+                    onClick={() => setShowMain(false)}
+                  />
+                </div>
+                <div className='flex flex-col justify-between h-full items-center py-2'>
+                  <div className='mt-[20px]'>
+                    <ArchiveIcon className='cursor-pointer w-[22px] h-[22px] text-slate-700 hover:text-black' />
+                  </div>
+                  <div>
+                    <GearIcon className='cursor-pointer w-[22px] h-[22px] text-slate-700 hover:text-black' />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

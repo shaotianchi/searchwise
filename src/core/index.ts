@@ -1,10 +1,16 @@
-import OpenAI from 'openai'
+import OpenAI from 'openai';
 
-import { get, insert, save, StorageKeys } from '@/lib/storage'
+import {
+  get,
+  insert,
+  save,
+  StorageKeys,
+} from '@/lib/storage';
 
 interface PageMeta {
   title: string
-  icon?: string
+  icon?: string | null
+  desc?: string | null
 }
 
 export interface SearchQueueNode {
